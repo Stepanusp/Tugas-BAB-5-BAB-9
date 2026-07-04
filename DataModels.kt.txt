@@ -1,0 +1,98 @@
+// ==========================================
+// CLASS 1: KAMARKOS
+// ==========================================
+class KamarKos(
+    val nomorKamar: String,
+    hargaAwal: Int,
+    isTersediaAwal: Boolean = true
+) {
+    // KEAMANAN 1: Custom Setter untuk memvalidasi harga tidak boleh minus
+    var harga: Int = hargaAwal
+        set(value) {
+            if (value < 0) {
+                println("⚠️ [Error]: Harga kamar tidak boleh minus! Nilai gagal diubah.")
+            } else {
+                field = value
+            }
+        }
+
+    // KEAMANAN 2: Private Set agar status keterisian tidak bisa diubah sembarangan dari luar
+    var isTersedia: Boolean = isTersediaAwal
+        private set
+
+    fun tampilkanInfo() {
+        val status = if (isTersedia) "✅ Kosong" else "❌ Terisi"
+        println("==========================================")
+        println("           INFORMASI KAMAR: $nomorKamar")
+        println("------------------------------------------")
+        println(" Harga  : Rp${"%,d".format(harga)}")
+        println(" Status : $status")
+        println("==========================================\n")
+    }
+
+    // Fungsi internal untuk mengubah status secara aman
+    fun ubahStatusKamar() {
+        isTersedia = !isTersedia
+    }
+}
+
+// ==========================================
+// CLASS 2: TRANSAKSI
+// ==========================================
+class Transaksi(
+    val transaksiId: String,
+    val kamar: KamarKos,
+    totalBayarAwal: Int
+) {
+    // KEAMANAN 3: Custom Setter memastikan nominal pembayaran valid
+    var totalBayar: Int = totalBayarAwal
+        set(value) {
+            if (value < 0) {
+                println("⚠️ [Error]: Total pembayaran tidak boleh kurang dari 0!")
+            } else {
+                field = value
+            }
+        }
+
+    // KEAMANAN 4: Private Set untuk mengamankan status alur transaksi
+    var statusPemesanan: String = "PENDING"
+        private set 
+
+    fun konfirmasiPembayaran() {
+        statusPemesanan = "SUKSES"
+        if (kamar.isTersedia) {
+            kamar.ubahStatusKamar() // Mengubah status kamar menjadi terisi secara otomatis & aman
+        }
+    }
+    
+    fun batalkanTransaksi() {
+        statusPemesanan = "BATAL"
+        if (!kamar.isTersedia) {
+            kamar.ubahStatusKamar() // Mengembalikan status kamar menjadi kosong kembali
+        }
+    }
+}
+
+// Fungsi main untuk menguji logika enkapsulasi & validasi
+fun main() {
+    println(">>> PENGUJIAN ENKAPSULASI SISTEM KOS ITK <<<\n")
+    
+    val kamarB3 = KamarKos("B-03", 1200000)
+
+    // Percobaan 1: Mengubah harga menjadi minus (Akan ditolak oleh Custom Setter)
+    println(">> [Uji Coba]: Mencoba mengubah harga menjadi -500,000...")
+    kamarB3.harga = -500000 
+    println("Harga saat ini: Rp${"%,d".format(kamarB3.harga)}\n") // Nilai tetap 1,200,000
+
+    // Percobaan 2: Mengubah status kamar langsung dari luar (Akan Error jika di-uncomment)
+    // kamarB3.isTersedia = false // ❌ Kompilasi Error: Cannot assign to 'isTersedia': the setter is private
+
+    // Percobaan 3: Melakukan Transaksi secara sah
+    val trx01 = Transaksi("TRX-992", kamarB3, 1200000)
+    kamarB3.tampilkanInfo() // Status awal masih kosong
+    
+    println(">> [Sistem]: Memproses pembayaran transaksi...")
+    trx01.konfirmasiPembayaran()
+    
+    kamarB3.tampilkanInfo() // Status otomatis berubah menjadi terisi dengan aman
+}
